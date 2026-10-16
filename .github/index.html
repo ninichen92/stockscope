@@ -4,7 +4,7 @@
 <div class="warn"><b>研究工具，不是買進建議。</b> 示範資料為程式產生的合成價格，不能用來推斷真實股票勝率。匯入真實歷史 CSV 後才會計算該檔案的歷史結果；來源真實性與完整性需自行核實。所有訊號均不保證未來表現。</div>
 <section class="card" style="margin-top:15px"><div class="row"><div><h2>每日真實行情同步</h2><p class="tiny">從部署網站的 market-data.json 讀取日線；行情屬延遲日資料，非即時報價。資料失敗時不會將模擬行情冒充真實資料。</p></div><button id="liveLoad">同步最新行情</button></div><div id="liveInfo" class="warn" style="margin-bottom:12px">尚未取得遠端行情。請部署資料排程，或手動匯入真實 CSV。</div></section><section class="card" style="margin-top:15px"><h2>資料與掃描設定</h2><div class="controls"><div class="field"><label>市場</label><select id="market"><option value="ALL">全部市場</option><option value="TW">台股</option><option value="US">美股</option></select></div><div class="field"><label>訊號最近幾個交易日</label><select id="recent"><option value="0">當日才觸發</option><option value="5" selected>最近 5 日</option><option value="20">最近 20 日</option><option value="99999">歷史所有訊號</option></select></div><div class="field"><label>單邊交易成本（基點，10=0.1%）</label><input id="cost" type="number" min="0" max="500" step="1" value="15"></div><div class="field"><label>最低已完成交易數</label><input id="minTrades" type="number" min="1" max="999" value="5"></div><div class="field"><label>排名依據</label><select id="sort"><option value="score">保守勝率（Wilson 下界）</option><option value="win">歷史勝率</option><option value="return">平均淨報酬</option><option value="dd">較低最大回撤</option></select></div><button id="run">重新掃描</button><button id="sample" class="secondary">載入模擬資料</button></div><div style="margin-top:13px" class="controls"><div class="field"><label>匯入真實日線 CSV（可多檔；每檔可含多支股票）</label><input type="file" id="files" accept=".csv,text/csv" multiple></div><button id="template" class="secondary">下載 CSV 範本</button><button id="export" class="secondary">匯出排名 CSV</button></div><p class="tiny">CSV 必備欄位：<code>Date,Symbol,Open,High,Low,Close</code>；選填 <code>Volume,Market</code>。日期 YYYY-MM-DD，價格為數字；Market=TW 或 US。資料須按股票提供足夠連續交易日；匯入會取代模擬資料。請使用一致的拆股／股利調整口徑，否則回測可能失真。</p><div class="status" id="status" aria-live="polite"></div></section>
 <section class="grid"><div class="card"><div class="tiny">已載入股票</div><div class="kpi" id="stockCount">—</div></div><div class="card"><div class="tiny">近期突破候選</div><div class="kpi" id="signalCount">—</div></div><div class="card"><div class="tiny">符合樣本門檻</div><div class="kpi" id="eligibleCount">—</div></div><div class="card"><div class="tiny">所有已完成回測交易</div><div class="kpi" id="tradeCount">—</div></div></section>
-<section class="card" id="researchPanel"><div class="row"><div><h2>整合個股研究室｜每日關鍵價位</h2><div class="mini">R1 第一壓力、R2 第二壓力、S1 第一支撐、S2 第二支撐、B 突破點。依最新載入日線重新計算，不代表每日自動取得市場報價。</div></div><button class="action" id="refreshLevels">重新計算價位</button></div><div class="controls" style="margin:12px 0"><div class="field"><label>搜尋個股</label><input id="researchSearch" placeholder="2330 / 台積電 / NVDA" autocomplete="off" /><div id="catalogMatches" class="catalog-matches" role="listbox" aria-label="股票搜尋建議"></div></div><button class="action" id="researchGo">查看個股</button><button class="action" id="watchAdd">☆ 加入自選股</button><button class="action" id="reportCopy">複製研究摘要</button></div><div class="row"><h2 id="researchName">選擇股票</h2><span class="pill" id="levelDate">資料日期：—</span></div><div class="levelgrid" id="levelGrid"></div><p class="mini" id="levelNote"></p><div class="tabs"><button class="active" data-tab="summary">技術面與研究摘要</button><button data-tab="fund">基本面</button><button data-tab="watch">自選股</button></div><div id="tab-summary"><div class="reportbox" id="researchReport">請先選擇個股。</div></div><div id="tab-fund" class="hidden"><p>基本面指標（EPS、ROE、營收、本益比、股利）需要獨立的財報來源。這個版本未連接財報 API，因此不顯示虛構數字。</p><p class="mini">日後可接入 TWSE／MOPS／SEC EDGAR 或合規資料商；技術價格 CSV 不能推導財務報表。</p></div><div id="tab-watch" class="hidden"><div id="watchRows"></div></div></section>
+<section class="card" id="researchPanel"><div class="row"><div><h2>整合個股研究室｜每日關鍵價位</h2><div class="mini">R1 第一壓力、R2 第二壓力、S1 第一支撐、S2 第二支撐、B 突破點。依最新載入日線重新計算，不代表每日自動取得市場報價。</div></div><button class="action" id="refreshLevels">重新計算價位</button></div><div class="controls" style="margin:12px 0"><div class="field"><label>搜尋個股</label><input id="researchSearch" placeholder="2330 / 台積電 / NVDA" autocomplete="off" /><div id="catalogMatches" class="catalog-matches" role="listbox" aria-label="股票搜尋建議"></div><div id="catalogStatus" class="catalog-hint" aria-live="polite">正在載入上市、上櫃股票清單…</div></div><button class="action" id="researchGo">查看個股</button><button class="action" id="watchAdd">☆ 加入自選股</button><button class="action" id="reportCopy">複製研究摘要</button></div><div class="row"><h2 id="researchName">選擇股票</h2><span class="pill" id="levelDate">資料日期：—</span></div><div class="levelgrid" id="levelGrid"></div><p class="mini" id="levelNote"></p><div class="tabs"><button class="active" data-tab="summary">技術面與研究摘要</button><button data-tab="fund">基本面</button><button data-tab="watch">自選股</button></div><div id="tab-summary"><div class="reportbox" id="researchReport">請先選擇個股。</div></div><div id="tab-fund" class="hidden"><p>基本面指標（EPS、ROE、營收、本益比、股利）需要獨立的財報來源。這個版本未連接財報 API，因此不顯示虛構數字。</p><p class="mini">日後可接入 TWSE／MOPS／SEC EDGAR 或合規資料商；技術價格 CSV 不能推導財務報表。</p></div><div id="tab-watch" class="hidden"><div id="watchRows"></div></div></section>
 <section class="card"><div class="row"><h2>突破候選排名</h2><span class="tiny">排名只比較當前篩選範圍內的候選股；不足樣本不參與排名</span></div><div class="scroll"><table><thead><tr><th>股票</th><th>市場</th><th>最近突破</th><th>距今交易日</th><th>歷史勝率</th><th>保守勝率</th><th>平均淨報酬</th><th>交易數</th><th>最大回撤</th><th>狀態</th></tr></thead><tbody id="rankBody"></tbody></table></div></section>
 <div class="split"><section class="card"><div class="row"><h2 id="detailTitle">個股詳情</h2><span class="pill" id="detailBadge">—</span></div><svg class="chart" id="chart" viewBox="0 0 700 245" preserveAspectRatio="none" role="img" aria-label="收盤價與三均線走勢"></svg><div class="legend"><span><i class="dot" style="background:#f2f5ff"></i>收盤價</span><span><i class="dot" style="background:#54d5a5"></i>MA5</span><span><i class="dot" style="background:#70aaff"></i>MA10</span><span><i class="dot" style="background:#efbd65"></i>MA20</span></div><p class="tiny" id="detailText"></p></section><section class="card"><h2>回測方法與限制</h2><p><b>突破定義：</b>前一交易日收盤價嚴格低於 MA5、MA10、MA20；訊號日收盤價嚴格高於當日三條均線。</p><p><b>進出場：</b>訊號確定後，下一交易日開盤買入；從訊號日算第 20 個交易日的收盤價賣出（進場後經歷 20 個交易時段）。不足 20 日的訊號不列入已完成回測。</p><p><b>報酬：</b>進場和出場分別扣除設定的單邊成本。勝率為淨報酬嚴格大於 0 的交易比例。</p><p><b>最大回撤：</b>每筆交易持有期間以每日收盤價標記的淨資產峰谷最大跌幅；不是完整投資組合回撤。</p><p><b>保守勝率：</b>Wilson 95% 信賴下界；樣本少時會受到更大懲罰。這不是未來勝率預測。</p><p class="tiny">同一股票的回測採不重疊持倉：持有期間忽略新訊號。僅使用當時及以前的均線資料，且下一日才進場以避免前視偏差；尚未納入滑價隨成交量變動、停牌、漲跌停無法成交、稅費差異、存活者偏差、除權息調整與樣本外驗證。美股與台股成本需自行依交易條件調整。</p></section></div>
 <section class="card"><h2>資料可信度與下一步</h2><p id="provenance">行情由部署後的每日排程產生 market-data.json。頁面載入時會嘗試讀取最新快照；失敗時明確顯示模擬或手動匯入資料。</p><details><summary>如何使用可核實的真實歷史資料？</summary><p>從交易所、公開資料或有授權的行情供應商取得至少 5 年的逐日日線，保留來源、下載日期、時區及調整價格口徑，整理成指定 CSV 匯入。匯入後 APP 會在本機瀏覽器重新掃描和回測，不會把資料上傳到伺服器。此版本附每日 GitHub Actions 更新腳本；必須自行部署 GitHub Pages 並啟用 Actions，才會每天產生新的行情快照。非盤中即時資料，亦無推播。</p></details><details><summary>如何正確評估「哪支股票勝率最高」？</summary><p>先將歷史期間切成訓練區間與未來樣本外區間；只在訓練區間調整規則，再以樣本外資料驗證。除了勝率，還要比較樣本數、平均淨報酬、風險與市場狀態。勝率高但平均獲利小、虧損大，仍可能賠錢。</p></details></section>
@@ -44,6 +44,7 @@ function renderWatch(){$('watchRows').innerHTML=watch.length?watch.map(sym=>`<sp
 // v0.5: Searchable catalog is independent of available historical price data.
 let symbolCatalog=[];
 let catalogLoaded=false;
+const catalogStatus=$('catalogStatus');
 const catalogMatches=$('catalogMatches');
 const researchInput=$('researchSearch');
 function normalizeSymbol(v){return String(v||'').trim().toUpperCase().replace(/\.(TW|TWO)$/,'')}
@@ -53,7 +54,7 @@ function openCatalogItem(item){
  researchInput.value=sym;
  catalogMatches.style.display='none';
  selected=sym;
- const r=results.find(x=>x.symbol===sym);
+ const r=results.find(x=>x.symbol===sym&&(!item.market||x.market===item.market));
  if(r){detail(sym);renderResearch(sym);return}
  $('researchName').textContent=sym+' '+(item.name||'');
  $('levelDate').textContent='尚未載入行情';
@@ -64,11 +65,12 @@ function openCatalogItem(item){
  $('detailBadge').textContent='尚無歷史行情';
  $('detailText').textContent='尚無足夠歷史行情，暫不提供技術分析。';
  $('chart').innerHTML='';
+ $('detailBadge').textContent='尚無歷史行情';
 }
 function renderCatalogMatches(){
  const q=researchInput.value.trim().toUpperCase();
  if(!q){catalogMatches.style.display='none';return}
- const found=symbolCatalog.filter(item=>String(item.symbol).toUpperCase().includes(q)||String(item.ticker).toUpperCase().includes(q)||String(item.name).toUpperCase().includes(q)).slice(0,30);
+ const found=symbolCatalog.filter(item=>String(item.symbol).toUpperCase().includes(q)||String(item.ticker).toUpperCase().includes(q)||String(item.name).toUpperCase().includes(q)).sort((a,b)=>Number(normalizeSymbol(a.symbol)!==normalizeSymbol(q))-Number(normalizeSymbol(b.symbol)!==normalizeSymbol(q))||Number(!String(a.name).toUpperCase().startsWith(q))-Number(!String(b.name).toUpperCase().startsWith(q))).slice(0,30);
  catalogMatches.replaceChildren();
  if(!found.length){const p=document.createElement('p');p.className='catalog-hint';p.textContent=catalogLoaded?'股票清單沒有符合的結果':'股票清單尚未載入，仍可查詢已載入行情的代號';catalogMatches.append(p)}
  for(const item of found){const b=document.createElement('button');b.type='button';b.setAttribute('role','option');b.textContent=item.symbol+' '+item.name+' · '+marketLabel(item)+(results.some(r=>r.symbol===normalizeSymbol(item.symbol))?' · 有行情':' · 尚無行情');b.onclick=()=>openCatalogItem(item);catalogMatches.append(b)}
@@ -92,11 +94,14 @@ $('researchGo').onclick=()=>{
  if(!response.ok)throw Error('HTTP '+response.status);
  const data=await response.json();
  if(data.schema!==1||!Array.isArray(data.stocks)||data.stocks.length<200)throw Error('股票清單格式不正確');
- symbolCatalog=data.stocks.filter(x=>x&&typeof x.symbol==='string'&&typeof x.name==='string'&&typeof x.ticker==='string');
+ symbolCatalog=data.stocks.filter(x=>x&&x.symbol!=null&&x.name!=null).map(x=>({...x,symbol:String(x.symbol).trim(),name:String(x.name).trim(),ticker:String(x.ticker||x.symbol).trim()}));
  for(const item of symbolCatalog){const sym=normalizeSymbol(item.symbol);if(item.name&&!names[sym])names[sym]=item.name}
  catalogLoaded=true;
+ const listed=symbolCatalog.filter(x=>x.exchange==='TWSE').length,otc=symbolCatalog.filter(x=>x.exchange==='TPEx').length;
+ catalogStatus.textContent='股票清單已載入：上市 '+listed+' 檔、上櫃 '+otc+' 檔；共 '+symbolCatalog.length+' 檔（含其他市場）。可搜尋代號或名稱；無行情也能找到股票。';
+ if(researchInput.value.trim())renderCatalogMatches();
  researchInput.placeholder='搜尋股票代號或名稱（共 '+symbolCatalog.length+' 檔）';
- }catch(err){console.warn('股票清單讀取失敗：',err);researchInput.placeholder='清單載入失敗，仍可輸入已載入股票代號'}
+ }catch(err){console.warn('股票清單讀取失敗：',err);catalogStatus.textContent='股票清單載入失敗：'+err.message+'。請確認 symbol-catalog.json 已部署到網站。';researchInput.placeholder='清單載入失敗，仍可輸入已載入股票代號'}
 })();
 $('watchAdd').onclick=()=>{if(selected&&!watch.includes(selected)){watch.push(selected);saveWatch()}};
 $('refreshLevels').onclick=()=>{scan();if(selected)renderResearch(selected)};
