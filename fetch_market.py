@@ -1,3 +1,66 @@
+#!/usr/bin/env python3
+"""Incrementally update StockScope historical prices from the symbol catalog.
+
+The catalog is a search index, not a guarantee of Yahoo Finance price coverage.
+Keep previously downloaded bars if individual requests fail.
+"""
+import datetime as dt
+import json
+import os
+import sys
+from pathlib import Path
+
+import pandas as pd
+import yfinance as yf
+
+ROOT = Path(__file__).resolve().parent
+CATALOG = ROOT / "symbol-catalog.json"
+TARGET = ROOT / "market-data.json"
+NEW_PER_RUN = 12
+REFRESH_PER_RUN = 6
+NEW_HISTORY = "2y"
+REFRESH_HISTORY = "3mo"
+
+
+def load_json(path, default):
+    if not path.exists():
+        return default
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def ticker_key(ticker):
+    ticker = ticker.upper().strip()
+    symbol = ticker.split(".")[0]
+    market = "TW" if ticker.endswith((".TW", ".TWO")) else "US"
+    return (market, symbol)
+
+
+def download(ticker, period):
+    frame = yf.Ticker(ticker).history(
+        period=period, interval="1d", auto_adjust=True,
+        actions=False, timeout=25
+    )
+    if frame is None or frame.empty:
+        raise ValueError("no daily prices returned")
+    market, symbol = ticker_key(ticker)
+    bars = []
+    for day, row in frame.iterrows():
+        vals = [float(row[k]) for k in ("Open", "High", "Low", "Close")]
+        if not all(pd.notna(x) and x > 0 for x in vals):
+            continue
+        if vals[1] < max(vals[0], vals[3]) or vals[2] > min(vals[0], vals[3]):
+            continue
+        volume = row.get("Volume", 0)
+        bars.append({
+            "date": day.strftime("%Y-%m-%d"),
+            "symbol": symbol, "market": market,
+            "open": round(vals[0], 5), "high": round(vals[1], 5),
+            "low": round(vals[2], 5), "close": round(vals[3], 5),
+            "volume": int(volume) if pd.notna(volume) else 0,
+        })
+    if len(bars) < 10:
+        raise ValueError("fewer than 10 valid trading days")
+    return bars
 
 def main():
     if not CATALOG.exists():
