@@ -1,0 +1,38 @@
+
+name: Build StockScope Symbol Catalog
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate symbol catalog
+        run: python build_symbol_catalog.py
+
+      - name: Commit catalog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add symbol-catalog.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Update symbol catalog"
+            git push
+          fi
